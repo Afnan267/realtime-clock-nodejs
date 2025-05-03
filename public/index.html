@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Real-Time Clock</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-size: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="clock">Loading time...</div>
+
+  <script>
+    const socket = io();
+
+    socket.on("time", (time) => {
+      document.getElementById("clock").textContent = time;
+    });
+  </script>
+</body>
+</html>
