@@ -16,13 +16,35 @@
   </style>
 </head>
 <body>
+    <div>
+        <select id="timezone">
+          <option value="UTC">UTC</option>
+          <option value="Asia/Karachi">Asia/Karachi</option>
+          <option value="America/New_York">America/New_York</option>
+          <option value="Europe/London">Europe/London</option>
+          <option value="Asia/Tokyo">Asia/Tokyo</option>
+        </select>
+      </div>
   <div id="clock">Loading time...</div>
 
   <script>
     const socket = io();
 
-    socket.on("time", (time) => {
-      document.getElementById("clock").textContent = time;
+    const timezoneSelect = document.getElementById("timezone");
+    let currentTimezone = timezoneSelect.value;
+
+    timezoneSelect.addEventListener("change", ()=>{
+        currentTimezone = timezoneSelect.value;
+    })
+
+    socket.on("time", (serverTime) => {
+        const date = new Date(serverTime)
+        const formattedTime = new Intl.DateTimeFormat('en-US', {
+            timeStyle: 'medium',
+            timeZone: currentTimezone
+        }).format(date)
+
+      document.getElementById("clock").textContent = formattedTime;
     });
   </script>
 </body>

@@ -15,7 +15,7 @@ io.on("connection", (socket) =>{
 
     // Emit current time every second
     setInterval(()=>{
-        const now = new Date().toLocaleTimeString();
+        const now = new Date()
         socket.emit("time", now)
     }, 1000)
 
