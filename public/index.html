@@ -31,10 +31,16 @@
     const socket = io();
 
     const timezoneSelect = document.getElementById("timezone");
-    let currentTimezone = timezoneSelect.value;
+    const clockDisplay = document.getElementById("clock");
+
+    // 🔄 Load saved timezone from localStorage or use default
+    let currentTimezone = localStorage.getItem("timezone") || timezoneSelect.value;
+
+    timezoneSelect.value = currentTimezone;
 
     timezoneSelect.addEventListener("change", ()=>{
         currentTimezone = timezoneSelect.value;
+        localStorage.setItem("timezone", currentTimezone) // 💾 Save preference
     })
 
     socket.on("time", (serverTime) => {
