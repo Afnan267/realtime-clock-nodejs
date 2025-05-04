@@ -13,10 +13,62 @@
       height: 100vh;
       font-size: 3rem;
     }
+    .clock {
+    width: 200px;
+    height: 200px;
+    border: 10px solid black;
+    border-radius: 50%;
+    position: relative;
+    margin: 20px auto;
+  }
+
+  .hand {
+    position: absolute;
+    width: 50%;
+    height: 2px;
+    background: black;
+    top: 50%;
+    left: 50%;
+    transform-origin: 0% 50%;
+    transform: rotate(90deg);
+  }
+
+  .hand.hour {
+    width: 30%;
+    height: 4px;
+    background: #333;
+  }
+
+  .hand.minute {
+    width: 45%;
+    height: 3px;
+    background: #666;
+  }
+
+  .hand.second {
+    width: 48%;
+    height: 2px;
+    background: red;
+  }
+
+  .center {
+    width: 10px;
+    height: 10px;
+    background: black;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -5px;
+    margin-left: -5px;
+    border-radius: 50%;
+  }
   </style>
 </head>
 <body>
+    <h2>Real-Time Clock</h2>
+
     <div>
+        <label for="timezone">Choose Timezone:</label>
         <select id="timezone">
           <option value="UTC">UTC</option>
           <option value="Asia/Karachi">Asia/Karachi</option>
@@ -24,14 +76,36 @@
           <option value="Europe/London">Europe/London</option>
           <option value="Asia/Tokyo">Asia/Tokyo</option>
         </select>
-      </div>
-  <div id="clock">Loading time...</div>
+    </div>
 
-  <script>
+    <button id="toggleView">Switch to Analog</button>
+
+    <div id="digitalView">
+        <h3 id="clock">Loading...</h3>
+    </div>
+
+    <div id="analogView" style="display: none;">
+        <div class="clock">
+          <div class="hand hour" id="hourHand"></div>
+          <div class="hand minute" id="minuteHand"></div>
+          <div class="hand second" id="secondHand"></div>
+          <div class="center"></div>
+        </div>
+    </div>
+
+  <!-- <script>
     const socket = io();
-
     const timezoneSelect = document.getElementById("timezone");
     const clockDisplay = document.getElementById("clock");
+    const toggleButton = document.getElementById("toggleView");
+
+    const digitalView = document.getElementById("digitalView");
+    const analogView = document.getElementById("analogView");
+
+    const hourHand = document.getElementById("hourHand");
+    const minuteHand = document.getElementById("minuteHand");
+    const secondHand = document.getElementById("secondHand");
+
 
     // 🔄 Load saved timezone from localStorage or use default
     let currentTimezone = localStorage.getItem("timezone") || timezoneSelect.value;
@@ -43,15 +117,103 @@
         localStorage.setItem("timezone", currentTimezone) // 💾 Save preference
     })
 
+    toggleButton.addEventListener("click", () => {
+        const isAnalog = analogView.style.display === "block";
+        analogView.style.display = isAnalog ? "none" : "block";
+        digitalView.style.display = isAnalog ? "block" : "none";
+        toggleButton.textContent = isAnalog ? "Switch to Analog" : "Switch to Digital";
+    });
+
     socket.on("time", (serverTime) => {
         const date = new Date(serverTime)
-        const formattedTime = new Intl.DateTimeFormat('en-US', {
-            timeStyle: 'medium',
-            timeZone: currentTimezone
-        }).format(date)
 
-      document.getElementById("clock").textContent = formattedTime;
+        const formattedTime = new Intl.DateTimeFormat('en-US', {
+            timeZone: currentTimezone,
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+        }).formatToParts(date).map(p => p.value).join(":")
+
+        const localTime = new Date(formattedTime)
+
+
+        // Digital clock display
+        const digitalFormatted = new Intl.DateTimeFormat('en-US', {
+            timeStyle: 'medium',
+            timeZone: currentTimezone,
+        }).format(date);
+
+        clockDisplay.textContent = digitalFormatted;
+
+        // Analog clock hand rotation
+        const hours = localTime.getHours() % 12;
+        const minutes = localTime.getMinutes();
+        const seconds = localTime.getSeconds();
+
+        hourHand.style.transform = `rotate(${(hours + minutes / 60) * 30}deg)`;
+        minuteHand.style.transform = `rotate(${(minutes + seconds / 60) * 6}deg)`;
+        secondHand.style.transform = `rotate(${seconds * 6}deg)`;
+        
+    });
+  </script> -->
+
+  <script>
+    const socket = io();
+    const timezoneSelect = document.getElementById("timezone");
+    const clockDisplay = document.getElementById("clock");
+    const toggleButton = document.getElementById("toggleView");
+  
+    const digitalView = document.getElementById("digitalView");
+    const analogView = document.getElementById("analogView");
+  
+    const hourHand = document.getElementById("hourHand");
+    const minuteHand = document.getElementById("minuteHand");
+    const secondHand = document.getElementById("secondHand");
+  
+    let currentTimezone = localStorage.getItem("timezone") || timezoneSelect.value;
+    timezoneSelect.value = currentTimezone;
+  
+    timezoneSelect.addEventListener("change", () => {
+      currentTimezone = timezoneSelect.value;
+      localStorage.setItem("timezone", currentTimezone);
+    });
+  
+    toggleButton.addEventListener("click", () => {
+      const isAnalog = analogView.style.display === "block";
+      analogView.style.display = isAnalog ? "none" : "block";
+      digitalView.style.display = isAnalog ? "block" : "none";
+      toggleButton.textContent = isAnalog ? "Switch to Analog" : "Switch to Digital";
+    });
+  
+    socket.on("time", (serverTime) => {
+      const utcDate = new Date(serverTime);
+  
+      // Convert UTC to local time using timezone
+      const dateStr = utcDate.toLocaleString('en-US', { timeZone: currentTimezone });
+      const localDate = new Date(dateStr);
+  
+      // Digital display
+      const formatted = new Intl.DateTimeFormat('en-US', {
+        timeStyle: 'medium',
+        timeZone: currentTimezone,
+      }).format(utcDate);
+      clockDisplay.textContent = formatted;
+  
+      // Analog hands
+      const hours = localDate.getHours() % 12;
+      const minutes = localDate.getMinutes();
+      const seconds = localDate.getSeconds();
+  
+      const hourDeg = (hours + minutes / 60) * 30;
+      const minuteDeg = (minutes + seconds / 60) * 6;
+      const secondDeg = seconds * 6;
+  
+      hourHand.style.transform = `rotate(${hourDeg}deg)`;
+      minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
+      secondHand.style.transform = `rotate(${secondDeg}deg)`;
     });
   </script>
+  
 </body>
 </html>
